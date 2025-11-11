@@ -19,15 +19,18 @@ func NewRouter(h handler.Handler) *chi.Mux {
 	mux.Route("/api/user", func(r chi.Router) {
 		r.Post("/register", h.RegisterUser)
 		r.Post("/login", h.LoginUser)
-		r.Route("/orders", func(ro chi.Router) {
-			ro.Post("/", h.DownloadOrders)
-			ro.Get("/", h.GetOrders)
+		r.Group(func(r chi.Router) {
+			r.Use(h.Auth)
+			r.Route("/orders", func(ro chi.Router) {
+				ro.Post("/", h.DownloadOrders)
+				ro.Get("/", h.GetOrders)
+			})
+			r.Route("/balance", func(rb chi.Router) {
+				rb.Get("/", h.GetBalance)
+				rb.Post("/withdraw", h.Withdraw)
+			})
+			r.Get("/withdrawals", h.GetWithdrawals)
 		})
-		r.Route("/balance", func(rb chi.Router) {
-			rb.Get("/", h.GetBalance)
-			rb.Post("/withdraw", h.Withdraw)
-		})
-		r.Get("/withdrawals", h.GetWithdrawals)
 	})
 	mux.Get("/ping", h.Ping)
 

@@ -1,11 +1,32 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
 )
+
+func (h *Handler) Auth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("session_token")
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		userID, valid := h.sessionStore.Get(cookie.Value)
+		if !valid {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), userID, userID)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 func (h *Handler) MiddlewareLogger() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/sweetheart0330/gopher_mart/internal/models"
 )
@@ -37,7 +38,7 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//TODO добавить автоматическую аутентификацию
+	h.setCookie(w, user.Login)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -73,7 +74,9 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
-	// TODO добавить cookie
+
+	h.setCookie(w, user.Login)
+
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -88,3 +91,19 @@ func (h *Handler) GetBalance(w http.ResponseWriter, r *http.Request) {}
 func (h *Handler) Withdraw(w http.ResponseWriter, r *http.Request)       {}
 func (h *Handler) GetWithdrawals(w http.ResponseWriter, r *http.Request) {}
 func (h *Handler) Ping(w http.ResponseWriter, r *http.Request)           {}
+
+func (h *Handler) setCookie(w http.ResponseWriter, userLogin string) {
+	sessID := h.generateSessionID()
+
+	h.sessionStore.Set(sessID, userLogin, 24*time.Hour)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_cookie",
+		Value:    sessID,
+		Path:     "/",
+		MaxAge:   86400,
+		Secure:   false,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+}
