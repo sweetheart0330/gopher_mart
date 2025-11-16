@@ -9,6 +9,9 @@ import (
 type IRepository interface {
 	RegisterUser(user models.User) error
 	GetPasswordHash(login string) (string, error)
+
+	DownloadOrder(userID string, order models.Order) (bool, error)
+	GetOrders(userID string) ([]models.Order, error)
 }
 
 type ISessionStore interface {

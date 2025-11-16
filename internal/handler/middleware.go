@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/sweetheart0330/gopher_mart/internal/models"
 )
 
 func (h *Handler) Auth(next http.Handler) http.Handler {
@@ -22,7 +23,7 @@ func (h *Handler) Auth(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), userID, userID)
+		ctx := context.WithValue(r.Context(), models.UserIDKey, userID)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
