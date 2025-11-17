@@ -12,6 +12,13 @@ type IRepository interface {
 
 	DownloadOrder(userID string, order models.Order) (bool, error)
 	GetOrders(userID string) ([]models.Order, error)
+	GetNotCalcOrders() ([]models.Order, error)
+	UpdateOrders(orders []models.Order) error
+
+	GetBalance(userID string) (models.Balance, error)
+	UpdateBalance(map[string]int) error
+
+	Withdraw(userID string, withdraw models.Withdrawal) error
 }
 
 type ISessionStore interface {

@@ -20,7 +20,7 @@ func (h *Handler) DownloadOrders(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value(models.UserIDKey).(string)
 	isNew, err := h.controller.DownloadOrder(userId, order)
 	if err != nil {
-		if errors.Is(err, models.ErrUserConflictsOrderId) {
+		if errors.Is(err, models.ErrUserConflictsId) {
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}

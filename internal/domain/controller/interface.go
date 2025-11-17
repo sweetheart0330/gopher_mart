@@ -1,6 +1,11 @@
 package controller
 
-import "github.com/sweetheart0330/gopher_mart/internal/models"
+import (
+	"context"
+	"time"
+
+	"github.com/sweetheart0330/gopher_mart/internal/models"
+)
 
 type Controller interface {
 	RegisterUser(user models.User) error
@@ -10,4 +15,7 @@ type Controller interface {
 	GetOrders(userID string) ([]models.Order, error)
 
 	GetBalance(userID string) (models.Balance, error)
+	WithDrawn(userId string, withdraw models.Withdrawal) error
+
+	OrdersPooler(ctx context.Context, poolInterval time.Duration, batchSize int)
 }

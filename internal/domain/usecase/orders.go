@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/sweetheart0330/gopher_mart/internal/models"
 )
@@ -11,6 +12,9 @@ func (u *UseCase) DownloadOrder(userID string, order models.Order) (bool, error)
 		u.log.Errorw("invalid order id", "order_id", order.OrderID)
 		return false, models.ErrInvalidOrderFormat
 	}
+
+	order.Status = models.New
+	order.UploadedAt = time.Now()
 
 	isNew, err := u.repo.DownloadOrder(userID, order)
 	if err != nil {
@@ -23,7 +27,7 @@ func (u *UseCase) DownloadOrder(userID string, order models.Order) (bool, error)
 	return isNew, nil
 }
 
-func (u *UseCase) GetOrder(userID string) ([]models.Order, error) {
+func (u *UseCase) GetOrders(userID string) ([]models.Order, error) {
 	orders, err := u.repo.GetOrders(userID)
 	if err != nil {
 		u.log.Errorw("could not get orders",
