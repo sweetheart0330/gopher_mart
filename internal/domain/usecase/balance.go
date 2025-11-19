@@ -22,3 +22,13 @@ func (u *UseCase) WithDrawn(userId string, withdraw models.Withdrawal) error {
 
 	return nil
 }
+
+func (u *UseCase) GetWithdrawals(userID string) (withdraws []models.Withdrawal, err error) {
+	withdrawals, err := u.GetWithdrawals(userID)
+	if err != nil {
+		u.log.Errorw("failed to get withdrawals from repo", "err", err)
+		return nil, err
+	}
+
+	return withdrawals, nil
+}

@@ -9,14 +9,19 @@ import (
 )
 
 type Handler struct {
-	log          zap.SugaredLogger
+	log          *zap.SugaredLogger
 	passHasher   auth.PassHasher
 	controller   controller.Controller
 	sessionStore repository.ISessionStore
 }
 
-func NewHandler(l zap.SugaredLogger) *Handler {
-	return &Handler{log: l}
+func NewHandler(l *zap.SugaredLogger, pass auth.PassHasher, ctrl controller.Controller, sess repository.ISessionStore) *Handler {
+	return &Handler{
+		log:          l,
+		passHasher:   pass,
+		controller:   ctrl,
+		sessionStore: sess,
+	}
 }
 
 func (h *Handler) generateSessionID() string {

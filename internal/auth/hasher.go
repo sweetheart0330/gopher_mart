@@ -25,7 +25,7 @@ func (h *PasswordHasher) Hash(password string) (string, error) {
 	return string(hashedBytes), nil
 }
 
-func (h *PasswordHasher) Verify(password string, hashedPassword string) error {
-	pepperedPassword := h.pepper + password
-	return bcrypt.CompareHashAndPassword([]byte(pepperedPassword), []byte(hashedPassword))
-}
+//func (h *PasswordHasher) Verify(password string, hashedPassword string) (bool, error) {
+//	pepperedPassword := h.pepper + password
+//	return bcrypt.CompareHashAndPassword([]byte(pepperedPassword), []byte(hashedPassword))
+//}

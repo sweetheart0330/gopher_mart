@@ -39,6 +39,7 @@ type Balance struct {
 
 type Withdrawal struct {
 	ID          int       `json:"id"`
+	WithdrawID  int       `json:"order"`
 	UserID      int       `json:"user_id"`
 	Sum         int       `json:"sum"`
 	ProcessedAt time.Time `json:"processed_at"`

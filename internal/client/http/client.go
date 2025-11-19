@@ -13,8 +13,10 @@ type Client struct {
 	url string
 }
 
-func NewClient() *Client {
-	return &Client{}
+func NewClient(addr string) *Client {
+	return &Client{
+		url: addr,
+	}
 }
 
 func (c *Client) GetCalcOrder(orderNumber string) (*models.Order, error) {

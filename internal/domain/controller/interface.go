@@ -16,6 +16,7 @@ type Controller interface {
 
 	GetBalance(userID string) (models.Balance, error)
 	WithDrawn(userId string, withdraw models.Withdrawal) error
+	GetWithdrawals(userID string) (withdraws []models.Withdrawal, err error)
 
 	OrdersPooler(ctx context.Context, poolInterval time.Duration, batchSize int)
 }

@@ -55,4 +55,26 @@ func (h *Handler) Withdraw(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) GetWithdrawals(w http.ResponseWriter, r *http.Request) {}
+func (h *Handler) GetWithdrawals(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value(models.UserIDKey).(string)
+
+	resp, err := h.controller.GetWithdrawals(userId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if len(resp) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(&resp)
+	if err != nil {
+		h.log.Errorw("could not encode response", "error", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
