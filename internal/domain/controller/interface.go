@@ -8,15 +8,15 @@ import (
 )
 
 type Controller interface {
-	RegisterUser(user models.User) error
-	GetPasswordHash(login string) (models.User, error)
+	RegisterUser(ctx context.Context, user models.User) error
+	GetPasswordHash(ctx context.Context, login string) (models.User, error)
 
-	DownloadOrder(userID string, order models.Order) (isNew bool, err error)
-	GetOrders(userID string) ([]models.Order, error)
+	DownloadOrder(ctx context.Context, userID string, order models.Order) (isNew bool, err error)
+	GetOrders(ctx context.Context, userID string) ([]models.Order, error)
 
-	GetBalance(userID string) (models.Balance, error)
-	WithDrawn(userId string, withdraw models.Withdrawal) error
-	GetWithdrawals(userID string) (withdraws []models.Withdrawal, err error)
+	GetBalance(ctx context.Context, userID string) (models.Balance, error)
+	WithDrawn(ctx context.Context, userId string, withdraw models.Withdrawal) error
+	GetWithdrawals(ctx context.Context, userID string) (withdraws []models.Withdrawal, err error)
 
 	OrdersPooler(ctx context.Context, poolInterval time.Duration, batchSize int)
 }

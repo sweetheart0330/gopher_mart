@@ -11,16 +11,16 @@ type IRepository interface {
 	RegisterUser(ctx context.Context, user models.User) error
 	GetPasswordHash(ctx context.Context, login string) (string, error)
 
-	DownloadOrder(userID string, order models.Order) (bool, error)
-	GetOrders(userID string) ([]models.Order, error)
-	GetNotCalcOrders() ([]models.Order, error)
-	UpdateOrders(orders []models.Order) error
+	DownloadOrder(ctx context.Context, userID string, order models.Order) (bool, error)
+	GetOrders(ctx context.Context, userID string) ([]models.Order, error)
+	GetNotCalcOrders(ctx context.Context) ([]models.Order, error)
+	UpdateOrders(ctx context.Context, orders []models.Order) error
 
-	GetBalance(userID string) (models.Balance, error)
-	UpdateBalance(map[string]int) error
+	GetBalance(ctx context.Context, userID string) (models.Balance, error)
+	UpdateBalance(ctx context.Context, bMap map[string]int) error
 
-	Withdraw(userID string, withdraw models.Withdrawal) error
-	GetWithdrawals(userID string) (withdraws []models.Withdrawal, err error)
+	Withdraw(ctx context.Context, userID string, withdraw models.Withdrawal) error
+	GetWithdrawals(ctx context.Context, userID string) (withdraws []models.Withdrawal, err error)
 }
 
 type ISessionStore interface {
