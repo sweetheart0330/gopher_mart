@@ -12,14 +12,14 @@ import (
 func (u *UseCase) OrdersPooler(ctx context.Context, poolInterval time.Duration, batchSize int) {
 	ticker := time.NewTicker(poolInterval)
 	defer ticker.Stop()
+L:
 	for {
-	L:
 		select {
 		case <-ctx.Done():
 			u.log.Info("Stopping OrdersPooler")
 			return
 		case <-ticker.C:
-			orders, err := u.repo.GetNotCalcOrders()
+			orders, err := u.repo.GetNotCalcOrders(ctx)
 			if err != nil {
 				u.log.Errorw("failed to get orders", "err", err)
 			}
@@ -27,7 +27,7 @@ func (u *UseCase) OrdersPooler(ctx context.Context, poolInterval time.Duration, 
 			// TODO добавить retry-механизм
 			// TODO проверить корректность работы цикла
 			for i := 0; i < len(orders); i += batchSize {
-				err = u.updateOrderWithAccrual(orders[i : i+batchSize])
+				err = u.updateOrderWithAccrual(ctx, orders[i:i+batchSize])
 				if err != nil {
 					u.log.Errorw("failed to update orders batch", "err", err)
 					continue L
@@ -41,8 +41,8 @@ func (u *UseCase) OrdersPooler(ctx context.Context, poolInterval time.Duration, 
 	}
 }
 
-func (u *UseCase) updateOrderWithAccrual(orders []models.Order) error {
-	userTotalSum := make(map[string]int)
+func (u *UseCase) updateOrderWithAccrual(ctx context.Context, orders []models.Order) error {
+	userTotalSum := make(map[int]int)
 
 	for i := 0; i < len(orders); {
 		err := u.getUpdatedOrder(&orders[i])
@@ -57,20 +57,16 @@ func (u *UseCase) updateOrderWithAccrual(orders []models.Order) error {
 		}
 
 		if orders[i].Status == "SUCCESS" {
-			userTotalSum[orders[i].OrderID] += orders[i].Accrual
+			userTotalSum[orders[i].UserID] += orders[i].Accrual
 		}
 
 		i++
 	}
 
-	err := u.repo.UpdateOrders(orders)
+	// TODO операции должны выполняться в рамках одной транзакции - их нужно объединить в один метод
+	err := u.repo.UpdatePollerStatuses(ctx, orders, userTotalSum)
 	if err != nil {
-		return fmt.Errorf("failed to update orders in repo: %w", err)
-	}
-
-	err = u.repo.UpdateBalance(userTotalSum)
-	if err != nil {
-		return fmt.Errorf("failed to update balance in repo: %w", err)
+		return fmt.Errorf("failed to update order status with accrual by poller: %w", err)
 	}
 
 	return nil

@@ -17,8 +17,8 @@ func (h *Handler) DownloadOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId := r.Context().Value(models.UserIDKey).(string)
-	isNew, err := h.controller.DownloadOrder(userId, order)
+	userLogin := r.Context().Value(models.UserIDKey).(string)
+	isNew, err := h.controller.DownloadOrder(r.Context(), userLogin, order)
 	if err != nil {
 		if errors.Is(err, models.ErrUserConflictsId) {
 			http.Error(w, err.Error(), http.StatusConflict)
@@ -43,8 +43,8 @@ func (h *Handler) DownloadOrders(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value(models.UserIDKey).(string)
-	orders, err := h.controller.GetOrders(userId)
+	userLogin := r.Context().Value(models.UserIDKey).(string)
+	orders, err := h.controller.GetOrders(r.Context(), userLogin)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

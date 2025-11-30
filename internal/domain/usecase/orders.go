@@ -17,7 +17,7 @@ func (u *UseCase) DownloadOrder(ctx context.Context, userID string, order models
 	order.Status = models.New
 	order.UploadedAt = time.Now()
 
-	isNew, err := u.repo.DownloadOrder(userID, order)
+	isNew, err := u.repo.DownloadOrder(ctx, userID, order)
 	if err != nil {
 		u.log.Errorw("failed to download order",
 			"order_id", order.OrderID,
@@ -29,7 +29,7 @@ func (u *UseCase) DownloadOrder(ctx context.Context, userID string, order models
 }
 
 func (u *UseCase) GetOrders(ctx context.Context, userID string) ([]models.Order, error) {
-	orders, err := u.repo.GetOrders(userID)
+	orders, err := u.repo.GetOrders(ctx, userID)
 	if err != nil {
 		u.log.Errorw("could not get orders",
 			"userID", userID,

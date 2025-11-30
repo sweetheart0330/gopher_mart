@@ -7,7 +7,7 @@ import (
 )
 
 func (u *UseCase) GetBalance(ctx context.Context, userId string) (balance models.Balance, err error) {
-	balance, err = u.repo.GetBalance(userId)
+	balance, err = u.repo.GetBalance(ctx, userId)
 	if err != nil {
 		u.log.Errorw("failed to get balance from repo", "err", err)
 
@@ -18,7 +18,7 @@ func (u *UseCase) GetBalance(ctx context.Context, userId string) (balance models
 }
 
 func (u *UseCase) WithDrawn(ctx context.Context, userId string, withdraw models.Withdrawal) error {
-	err := u.repo.Withdraw(userId, withdraw)
+	err := u.repo.Withdraw(ctx, userId, withdraw)
 	if err != nil {
 		u.log.Errorw("failed to withdraw from repo", "err", err)
 		return err

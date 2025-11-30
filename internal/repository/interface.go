@@ -14,10 +14,9 @@ type IRepository interface {
 	DownloadOrder(ctx context.Context, userID string, order models.Order) (bool, error)
 	GetOrders(ctx context.Context, userID string) ([]models.Order, error)
 	GetNotCalcOrders(ctx context.Context) ([]models.Order, error)
-	UpdateOrders(ctx context.Context, orders []models.Order) error
 
 	GetBalance(ctx context.Context, userID string) (models.Balance, error)
-	UpdateBalance(ctx context.Context, bMap map[string]int) error
+	UpdatePollerStatuses(ctx context.Context, orders []models.Order, balance map[int]int) error
 
 	Withdraw(ctx context.Context, userID string, withdraw models.Withdrawal) error
 	GetWithdrawals(ctx context.Context, userID string) (withdraws []models.Withdrawal, err error)

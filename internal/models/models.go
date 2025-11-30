@@ -17,8 +17,8 @@ const (
 
 type User struct {
 	ID       int    `json:"id"`
-	Login    string `json:"login"`
-	Password string `json:"password"`
+	Login    string `json:"login" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }
 
 type Order struct {

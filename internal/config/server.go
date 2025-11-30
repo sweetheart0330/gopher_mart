@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"fmt"
+
 	"github.com/caarlos0/env/v6"
 )
 
@@ -18,7 +19,7 @@ func GetOptions() (host Options, err error) {
 	fl := Options{}
 	flag.StringVar(&fl.Host, "a", ":8080", "address and port to send requests")
 	flag.StringVar(&fl.URIDatabase, "d", "", "database uri")
-	flag.StringVar(&fl.AccrualAddr, "d", "", "accrual system address")
+	flag.StringVar(&fl.AccrualAddr, "r", "", "accrual system address")
 	flag.StringVar(&fl.AuthPepper, "p", "", "auth pepper")
 	flag.IntVar(&fl.AuthCost, "c", 8, "auth cost")
 

@@ -2,7 +2,9 @@ package pg
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/sweetheart0330/gopher_mart/internal/models"
 )
 
@@ -37,22 +39,72 @@ const (
         WHERE o.order_id = u.order_id`
 )
 
-func (db *Database) DownloadOrder(ctx context.Context, userID string, order models.Order) (bool, error) {
-	//TODO implement me
-	panic("implement me")
+func (db *Database) DownloadOrder(ctx context.Context, userLogin string, order models.Order) (bool, error) {
+	_, err := db.pg.Exec(ctx, InsertOrder, order.OrderID, userLogin, order.Status, order.Accrual, order.UploadedAt)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
-func (db *Database) GetOrders(ctx context.Context, userID string) ([]models.Order, error) {
-	//TODO implement me
-	panic("implement me")
+func (db *Database) GetOrders(ctx context.Context, userLogin string) ([]models.Order, error) {
+	rows, err := db.pg.Query(ctx, SelectOrders, userLogin)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+
+	var orders []models.Order
+	for rows.Next() {
+		var order models.Order
+		err = rows.Scan(
+			&order.ID,
+			&order.OrderID,
+			&order.UserID,
+			&order.Status,
+			&order.Accrual,
+			&order.UploadedAt)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+
+		orders = append(orders, order)
+	}
+
+	return orders, nil
 }
 
 func (db *Database) GetNotCalcOrders(ctx context.Context) ([]models.Order, error) {
-	//TODO implement me
-	panic("implement me")
+	rows, err := db.pg.Query(ctx, SelectNotCalculatedOrders)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+
+	var orders []models.Order
+	for rows.Next() {
+		var order models.Order
+		err = rows.Scan(
+			&order.ID,
+			&order.OrderID,
+			&order.UserID,
+			&order.Status,
+			&order.Accrual,
+			&order.UploadedAt)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+
+		orders = append(orders, order)
+	}
+
+	return orders, nil
 }
 
-func (db *Database) UpdateOrders(ctx context.Context, orders []models.Order) error {
-	//TODO implement me
-	panic("implement me")
+func (db *Database) updateOrders(ctx context.Context, tx pgx.Tx, orders []models.Order) error {
+	_, err := tx.Exec(ctx, UpdateOrders, orders)
+	if err != nil {
+		return fmt.Errorf("failed to send request: %w", err)
+	}
+
+	return nil
 }

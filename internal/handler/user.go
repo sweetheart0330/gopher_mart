@@ -18,6 +18,13 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO добавить нормальную валидацию входных данных
+	if len(user.Login) == 0 || len(user.Password) == 0 {
+		h.log.Errorw("required field is empty", "error", err)
+		http.Error(w, "required field is empty", http.StatusBadRequest)
+		return
+	}
+
 	passHash, err := h.passHasher.Hash(user.Password)
 	if err != nil {
 		h.log.Errorw("could not hash password", "error", err)
@@ -27,7 +34,7 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	user.Password = passHash
 
-	err = h.controller.RegisterUser(user)
+	err = h.controller.RegisterUser(r.Context(), user)
 	if err != nil {
 		if errors.Is(err, models.ErrUserAlreadyExists) {
 			http.Error(w, err.Error(), http.StatusConflict)
@@ -52,10 +59,10 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userHash, err := h.controller.GetPasswordHash(user.Login)
+	userHash, err := h.controller.GetPasswordHash(r.Context(), user.Login)
 	if err != nil {
 		if errors.Is(err, models.ErrUserNotFound) {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			http.Error(w, "could not get password hash", http.StatusUnauthorized)
 			return
 		}
 

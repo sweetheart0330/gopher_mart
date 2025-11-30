@@ -50,11 +50,11 @@ func NewDatabase(ctx context.Context, connStr string, log *zap.SugaredLogger) (r
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to database: %w", err)
 	}
-	db := &Database{pg: pool}
-	err = db.migrateTable(ctx, connStr, log)
-	if err != nil {
-		log.Errorw("could not migrate table", "error", err)
-	}
+	//	db := &Database{pg: pool}
+	//	err = db.migrateTable(ctx, connStr, log)
+	//	if err != nil {
+	//		log.Errorw("could not migrate table", "error", err)
+	//	}
 
 	return &Database{pg: pool}, nil
 }

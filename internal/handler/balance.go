@@ -11,7 +11,7 @@ import (
 func (h *Handler) GetBalance(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value(models.UserIDKey).(string)
 
-	balance, err := h.controller.GetBalance(userId)
+	balance, err := h.controller.GetBalance(r.Context(), userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -38,7 +38,7 @@ func (h *Handler) Withdraw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.controller.WithDrawn(userId, withdraw)
+	err = h.controller.WithDrawn(r.Context(), userId, withdraw)
 	if err != nil {
 		if errors.Is(err, models.ErrInsufficientFunds) {
 			http.Error(w, err.Error(), http.StatusPaymentRequired)
@@ -58,7 +58,7 @@ func (h *Handler) Withdraw(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetWithdrawals(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value(models.UserIDKey).(string)
 
-	resp, err := h.controller.GetWithdrawals(userId)
+	resp, err := h.controller.GetWithdrawals(r.Context(), userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
