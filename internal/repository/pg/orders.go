@@ -10,33 +10,27 @@ import (
 
 const (
 	SelectOrders = `
-		SELECT o.id, o.order_id, o.user_id, o.status, o.accrual, o.uploaded 
+		SELECT o.id, o.order_id, o.user_id, o.status, o.accrual, o.uploaded_at
 		FROM gopher_mart.orders AS o
 		WHERE user_id = (SELECT users.id FROM gopher_mart.users WHERE login = $1)
 `
 	InsertOrder = `
-    	INSERT INTO gopher_mart.orders (order_id, user_id, status, accrual, uploaded)
+    	INSERT INTO gopher_mart.orders (order_id, user_id, status, accrual, uploaded_at)
     	VALUES ($1, (SELECT id FROM gopher_mart.users WHERE login = $2), $3, $4, $5)
     	ON CONFLICT (order_id) DO NOTHING
     	RETURNING id
 `
 	SelectNotCalculatedOrders = `
-		SELECT o.id, o.order_id, o.user_id, o.status, o.accrual, o.uploaded 
+		SELECT o.id, o.order_id, o.user_id, o.status, o.accrual, o.uploaded_at 
 		FROM gopher_mart.orders AS o
-		WHERE o.status = 'NEW' || o.status = 'PROCESSING';
+		WHERE (o.status = 'NEW' OR o.status = 'PROCESSING');
 `
-	UpdateOrders = `
+	UpdateOrder = `
 		UPDATE gopher_mart.orders AS o
         SET 
-            status = u.status,
-            accrual = u.accrual
-        FROM (
-            SELECT 
-                unnest($1::text[]) AS order_id,
-                unnest($2::text[]) AS status,
-                unnest($3::numeric[]) AS accrual
-        ) AS u
-        WHERE o.order_id = u.order_id`
+            status = $1,
+            accrual = $2
+        WHERE o.order_id = $3`
 )
 
 func (db *Database) DownloadOrder(ctx context.Context, userLogin string, order models.Order) (bool, error) {
@@ -101,9 +95,11 @@ func (db *Database) GetNotCalcOrders(ctx context.Context) ([]models.Order, error
 }
 
 func (db *Database) updateOrders(ctx context.Context, tx pgx.Tx, orders []models.Order) error {
-	_, err := tx.Exec(ctx, UpdateOrders, orders)
-	if err != nil {
-		return fmt.Errorf("failed to send request: %w", err)
+	for _, order := range orders {
+		_, err := tx.Exec(ctx, UpdateOrder, order.Status, order.Accrual, order.OrderID)
+		if err != nil {
+			return fmt.Errorf("failed to send request: %w", err)
+		}
 	}
 
 	return nil

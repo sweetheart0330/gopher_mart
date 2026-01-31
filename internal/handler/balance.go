@@ -28,7 +28,7 @@ func (h *Handler) GetBalance(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Withdraw(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value(models.UserIDKey).(string)
+	userLogin := r.Context().Value(models.UserIDKey).(string)
 
 	var withdraw models.Withdrawal
 	err := json.NewDecoder(r.Body).Decode(&withdraw)
@@ -38,7 +38,13 @@ func (h *Handler) Withdraw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.controller.WithDrawn(r.Context(), userId, withdraw)
+	if withdraw.Sum < 0 {
+		h.log.Errorw("sum should be over zero", "error", err)
+		http.Error(w, "sum should be over zero", http.StatusBadRequest)
+		return
+	}
+
+	err = h.controller.WithDrawn(r.Context(), userLogin, withdraw)
 	if err != nil {
 		if errors.Is(err, models.ErrInsufficientFunds) {
 			http.Error(w, err.Error(), http.StatusPaymentRequired)

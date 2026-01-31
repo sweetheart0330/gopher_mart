@@ -37,7 +37,7 @@ func RunServer(ctx context.Context) error {
 		return fmt.Errorf("failed to init database, err: %w", err)
 	}
 
-	cl := httpAccr.NewClient(opt.AccrualAddr)
+	cl := httpAccr.NewClient(opt.AccrualAddr, sugar)
 	u := usecase.NewUseCase(&sugar, repo, cl)
 
 	passHasher := auth.NewPasswordHasher(opt.AuthPepper, opt.AuthCost)
@@ -57,6 +57,12 @@ func RunServer(ctx context.Context) error {
 		if err = server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			return fmt.Errorf("failed to start server: %w", err)
 		}
+
+		return nil
+	})
+
+	eg.Go(func() error {
+		u.OrdersPooler(egCtx, 10*time.Second, 10)
 
 		return nil
 	})

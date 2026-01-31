@@ -95,7 +95,7 @@ func (h *Handler) setCookie(w http.ResponseWriter, userLogin string) {
 	h.sessionStore.Set(sessID, userLogin, 24*time.Hour)
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "session_cookie",
+		Name:     cookieKey,
 		Value:    sessID,
 		Path:     "/",
 		MaxAge:   86400,

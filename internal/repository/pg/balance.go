@@ -10,21 +10,20 @@ import (
 
 const (
 	selectBalance = `
-	SELECT b.id, b.user_id, b.balance, b.with_drawn 
+	SELECT b.id, b.user_id, b.balance, b.with_drawn, b.processed_at
 	FROM gopher_mart.balances AS b
 	WHERE user_id = (SELECT users.id FROM gopher_mart.users WHERE login = $1);
 `
 	updateBalance = `
-	UPDATE gopher_mart.balances AS b
-	SET b.accrual = b.accrual + $1
-	WHERE b.user_id = $2;
+	INSERT INTO gopher_mart.balances (user_id, balance)
+	VALUES ($1, $2)
+	ON CONFLICT (user_id)
+	DO UPDATE SET
+    	balance = gopher_mart.balances.balance + EXCLUDED.balance;
 `
 	insertWithDrawn = `
-	INSERT INTO gopher_mart.withdrawals AS w
-	w.withdraw_id = $1,
-	w.user_id = $2,
-	w.sum = $3,
-	w.processed_at = $4;
+	INSERT INTO gopher_mart.withdrawals (withdraw_id, user_id, sum)
+	VALUES ($1, $2, $3);
 `
 	selectUserWithDrawals = `
 	SELECT w.id, w.withdraw_id, w.user_id, w.sum, w.processed_at 
@@ -71,7 +70,7 @@ func (db *Database) UpdatePollerStatuses(ctx context.Context, orders []models.Or
 
 func (db *Database) updateBalance(ctx context.Context, tx pgx.Tx, balance map[int]int) error {
 	for userId, accrual := range balance {
-		_, err := tx.Exec(ctx, updateBalance, accrual, userId)
+		_, err := tx.Exec(ctx, updateBalance, userId, accrual)
 		if err != nil {
 			return err
 		}
@@ -80,7 +79,7 @@ func (db *Database) updateBalance(ctx context.Context, tx pgx.Tx, balance map[in
 	return nil
 }
 
-func (db *Database) Withdraw(ctx context.Context, userID string, withdraw models.Withdrawal) error {
+func (db *Database) Withdraw(ctx context.Context, userLogin string, withdraw models.Withdrawal) error {
 	tx, err := db.pg.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %v", err)
@@ -88,26 +87,36 @@ func (db *Database) Withdraw(ctx context.Context, userID string, withdraw models
 	defer tx.Rollback(ctx)
 
 	var b models.Balance
-	err = tx.QueryRow(ctx, selectBalance, userID).Scan(&b.ID, &b.UserID, &b.BalanceSum, &b.WithDrawn)
+	err = tx.QueryRow(ctx, selectBalance, userLogin).Scan(&b.ID, &b.UserID, &b.BalanceSum, &b.WithDrawn)
 	if err != nil {
 		return fmt.Errorf("failed to get balance: %w", err)
 	}
 
+	withdraw.UserId = b.UserID
 	if b.BalanceSum < withdraw.Sum {
 		return models.ErrInsufficientFunds
 	}
 
-	_, err = tx.Exec(ctx, insertWithDrawn, withdraw.WithdrawID, withdraw.UserID, withdraw.Sum, withdraw.ProcessedAt)
+	_, err = tx.Exec(ctx, insertWithDrawn, withdraw.WithdrawID, withdraw.UserId, withdraw.Sum)
 	if err != nil {
 		return fmt.Errorf("failed to insert withdraw: %w", err)
 	}
 
+	_, err = tx.Exec(ctx, updateBalance, b.UserID, withdraw.Sum*(-1))
+	if err != nil {
+		return err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to commit transaction: %v", err)
+	}
 	return nil
 }
 
 func (db *Database) GetWithdrawals(ctx context.Context, userLogin string) (withdraws []models.Withdrawal, err error) {
 
-	rows, err := db.pg.Query(ctx, selectBalance, userLogin)
+	rows, err := db.pg.Query(ctx, selectUserWithDrawals, userLogin)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
@@ -117,7 +126,7 @@ func (db *Database) GetWithdrawals(ctx context.Context, userLogin string) (withd
 		err = rows.Scan(
 			&wd.ID,
 			&wd.WithdrawID,
-			&wd.UserID,
+			&wd.UserId,
 			&wd.Sum,
 			&wd.ProcessedAt)
 		if err != nil {

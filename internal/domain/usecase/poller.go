@@ -19,6 +19,7 @@ L:
 			u.log.Info("Stopping OrdersPooler")
 			return
 		case <-ticker.C:
+			u.log.Debug("Update Start OrdersPooler")
 			orders, err := u.repo.GetNotCalcOrders(ctx)
 			if err != nil {
 				u.log.Errorw("failed to get orders", "err", err)
@@ -26,18 +27,25 @@ L:
 
 			// TODO добавить retry-механизм
 			// TODO проверить корректность работы цикла
-			for i := 0; i < len(orders); i += batchSize {
-				err = u.updateOrderWithAccrual(ctx, orders[i:i+batchSize])
+			// Обрабатываем батчи
+			for i := 0; i < len(orders); {
+				end := i + batchSize
+				if end > len(orders) {
+					end = len(orders)
+				}
+
+				batch := orders[i:end]
+				err = u.updateOrderWithAccrual(ctx, batch)
 				if err != nil {
-					u.log.Errorw("failed to update orders batch", "err", err)
+					u.log.Errorw("failed to update orders batch", "err", err, "batch_len", len(batch))
 					continue L
 				}
 
-				if i+batchSize >= len(orders) {
-					batchSize = len(orders) - 1 - i
-				}
+				i = end // переходим к следующему батчу
 			}
 		}
+
+		u.log.Debug("Updated OrdersPooler")
 	}
 }
 
@@ -56,7 +64,7 @@ func (u *UseCase) updateOrderWithAccrual(ctx context.Context, orders []models.Or
 			return fmt.Errorf("failed to update order status with accrual: %w", err)
 		}
 
-		if orders[i].Status == "SUCCESS" {
+		if orders[i].Status == "PROCESSED" {
 			userTotalSum[orders[i].UserID] += orders[i].Accrual
 		}
 

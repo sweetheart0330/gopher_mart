@@ -9,9 +9,13 @@ import (
 	"github.com/sweetheart0330/gopher_mart/internal/models"
 )
 
+const (
+	cookieKey = "session_token"
+)
+
 func (h *Handler) Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("session_token")
+		cookie, err := r.Cookie(cookieKey)
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return

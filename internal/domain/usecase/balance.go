@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"time"
 
 	"github.com/sweetheart0330/gopher_mart/internal/models"
 )
@@ -17,8 +18,9 @@ func (u *UseCase) GetBalance(ctx context.Context, userId string) (balance models
 	return balance, nil
 }
 
-func (u *UseCase) WithDrawn(ctx context.Context, userId string, withdraw models.Withdrawal) error {
-	err := u.repo.Withdraw(ctx, userId, withdraw)
+func (u *UseCase) WithDrawn(ctx context.Context, userLogin string, withdraw models.Withdrawal) error {
+	withdraw.ProcessedAt = time.Now()
+	err := u.repo.Withdraw(ctx, userLogin, withdraw)
 	if err != nil {
 		u.log.Errorw("failed to withdraw from repo", "err", err)
 		return err
@@ -28,7 +30,7 @@ func (u *UseCase) WithDrawn(ctx context.Context, userId string, withdraw models.
 }
 
 func (u *UseCase) GetWithdrawals(ctx context.Context, userID string) (withdraws []models.Withdrawal, err error) {
-	withdrawals, err := u.GetWithdrawals(ctx, userID)
+	withdrawals, err := u.repo.GetWithdrawals(ctx, userID)
 	if err != nil {
 		u.log.Errorw("failed to get withdrawals from repo", "err", err)
 		return nil, err

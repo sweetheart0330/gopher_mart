@@ -18,7 +18,7 @@ type IRepository interface {
 	GetBalance(ctx context.Context, userID string) (models.Balance, error)
 	UpdatePollerStatuses(ctx context.Context, orders []models.Order, balance map[int]int) error
 
-	Withdraw(ctx context.Context, userID string, withdraw models.Withdrawal) error
+	Withdraw(ctx context.Context, userLogin string, withdraw models.Withdrawal) error
 	GetWithdrawals(ctx context.Context, userID string) (withdraws []models.Withdrawal, err error)
 }
 
