@@ -10,7 +10,7 @@ import (
 
 const (
 	selectBalance = `
-	SELECT b.id, b.user_id, b.balance, b.with_drawn, b.processed_at
+	SELECT b.id, b.user_id, b.balance, b.with_drawn
 	FROM gopher_mart.balances AS b
 	WHERE user_id = (SELECT users.id FROM gopher_mart.users WHERE login = $1);
 `
